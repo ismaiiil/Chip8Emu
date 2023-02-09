@@ -5,4 +5,24 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="bin\Debug\net6.0\Chip8Emu.deps.json" />
+    <Content Include="bin\Debug\net6.0\Chip8Emu.dll" />
+    <Content Include="bin\Debug\net6.0\Chip8Emu.exe" />
+    <Content Include="bin\Debug\net6.0\Chip8Emu.pdb" />
+    <Content Include="bin\Debug\net6.0\Chip8Emu.runtimeconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="bin\**" />
+  </ItemGroup>
+
 </Project>
