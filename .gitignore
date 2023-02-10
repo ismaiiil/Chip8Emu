@@ -1,4 +1,4 @@
 ﻿/.idea/
 /.vs/
-/Chip8Emu/bin
-/Chip8Emu/obj
+bin/
+obj/

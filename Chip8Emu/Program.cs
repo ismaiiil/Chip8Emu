@@ -33,7 +33,7 @@ namespace Chip8Emu
                 0xF0, 0x80, 0xF0, 0x80, 0x80 // F
             };
             
-            Array.Copy(FontData,0x000 , ChipHardware.MEMORY,0x050,FontData.Length);
+            Array.Copy(FontData,0x000 , ChipHardware.MEMORY,ChipHardware.FontStartAddr,FontData.Length);
 
             // Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,true));
 
@@ -45,9 +45,12 @@ namespace Chip8Emu
             Array.Copy(program, 0, ChipHardware.MEMORY, 0x200, program.Length);
             
             Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,false));
+            
+        }
 
-            // ChipHardware.OPC_BNNN(0xB123);
-
+        private static void MainLoop()
+        {
+            
         }
     }
 }
