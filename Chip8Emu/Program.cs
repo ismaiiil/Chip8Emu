@@ -44,25 +44,10 @@ namespace Chip8Emu
             byte[] program = File.ReadAllBytes(args[0]);
             Array.Copy(program, 0, ChipHardware.MEMORY, 0x200, program.Length);
             
-            // Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,true));
+            Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,false));
 
-            // byte[] randomByte = getRandomByte();
-            
-            // ChipHardware.OPC_1NNN_JP(0xFFF);
-            
-            ushort firstNumber = 14, secondNumber = 0x0000, result;
-            result = (ushort)(firstNumber & secondNumber);
-            Console.WriteLine("{0} & {1} = {2}", firstNumber, secondNumber, result);
+            // ChipHardware.OPC_BNNN(0xB123);
 
-            firstNumber = 4097;
-            secondNumber = 0x0FFF;
-            result = (ushort)(firstNumber & secondNumber);
-            Console.WriteLine("{0} & {1} = {2}", firstNumber, secondNumber, result);
-            
         }
-
-        
-
-
     }
 }
