@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-
+using System.Threading;
 
 //using doc at http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 namespace Chip8Emu
 {
     class Program
     {
+        public static bool QuitFlag= false;
         static void Main(string[] args)
         {
-            
-            //
+
             byte[] FontData = {
                 0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
                 0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -33,24 +31,34 @@ namespace Chip8Emu
                 0xF0, 0x80, 0xF0, 0x80, 0x80 // F
             };
             
-            Array.Copy(FontData,0x000 , ChipHardware.MEMORY,ChipHardware.FontStartAddr,FontData.Length);
-
+            Array.Copy(FontData,0x000 , CpuChip8.MEMORY,CpuChip8.FontStartAddr,FontData.Length);
+            
             // Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,true));
-
-            ChipHardware.PC = 0x200;
-            ChipHardware.I = 0;
-            ChipHardware.SP = 0;
+            
+            CpuChip8.PC = 0x200;
+            CpuChip8.I = 0;
+            CpuChip8.SP = 0;
+            long cycleDelay = 20000;
             
             byte[] program = File.ReadAllBytes(args[0]);
-            Array.Copy(program, 0, ChipHardware.MEMORY, 0x200, program.Length);
+            Array.Copy(program, 0, CpuChip8.MEMORY, 0x200, program.Length);
             
-            Console.WriteLine(BitDebugger.DumpByteArray(ChipHardware.MEMORY,4,1024,false));
+            ThreadStart displayRef = DisplayThread;
+            Thread displayThreadInst = new Thread(displayRef);
+            displayThreadInst.Start();
             
+            while (!QuitFlag)
+            {
+                Thread.Sleep(new TimeSpan(cycleDelay));
+                CpuChip8.MainLoop();
+            }
         }
-
-        private static void MainLoop()
+        
+        public static void DisplayThread()
         {
-            
+            Console.WriteLine("Display Thread Started");
+            var game = new RenderingProject.Game1();
+            game.Run();
         }
     }
 }

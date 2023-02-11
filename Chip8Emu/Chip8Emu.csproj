@@ -19,6 +19,8 @@
 
   <ItemGroup>
     <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Include="DisplayRenderer\Icon.bmp" />
+    <EmbeddedResource Include="DisplayRenderer\Icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +29,10 @@
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.13.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RenderingProject\RenderingProject.csproj" />
   </ItemGroup>
 
 </Project>

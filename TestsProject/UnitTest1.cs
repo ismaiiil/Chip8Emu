@@ -9,6 +9,7 @@ public class Tests
     {
         //peepeepoopoo
     }
+    
 
     [Test]
     public void Test_Opcode_Fetch()
@@ -30,8 +31,7 @@ public class Tests
     {
         ushort opcode   = 0x1234;
         byte opKey = (byte)((opcode & 0xF000) >> 12);
-        var theObject = (Action<ushort>)ChipHardware.OpcodeTable[opKey];
-        theObject(opcode);
+        ((Action<ushort>)CpuChip8.OpcodeTable[opKey])(opcode);
     }
     
     [Test]
@@ -42,9 +42,8 @@ public class Tests
         byte opKey1 = (byte)((opcode & 0xF000) >> 12);
         byte opKey2 = (byte)(opcode & 0x000F);
         
-        var theObject =  (Action<ushort>)((Dictionary<ushort,object>)ChipHardware.OpcodeTable[opKey1])[opKey2];
-        theObject(opcode);
-    
+        ((Action<ushort>)((Dictionary<ushort,object>)CpuChip8.OpcodeTable[opKey1])[opKey2])(opcode);
+
     }
     
     [Test]
@@ -55,8 +54,7 @@ public class Tests
         byte opKey1 = (byte)((opcode & 0xF000) >> 12);
         byte opKey2 = (byte)(opcode & 0x000F);
         
-        var theObject =  (Action<ushort>)((Dictionary<ushort,object>)ChipHardware.OpcodeTable[opKey1])[opKey2];
-        theObject(opcode);
+        ((Action<ushort>)((Dictionary<ushort,object>)CpuChip8.OpcodeTable[opKey1])[opKey2])(opcode);
     }
     
     [Test]
@@ -67,7 +65,6 @@ public class Tests
         byte opKey1 = (byte)((opcode & 0xF000) >> 12);
         byte opKey2 = (byte)(opcode & 0x00FF);
         
-        var theObject =  (Action<ushort>)((Dictionary<ushort,object>)ChipHardware.OpcodeTable[opKey1])[opKey2];
-        theObject(opcode);
+        ((Action<ushort>)((Dictionary<ushort,object>)CpuChip8.OpcodeTable[opKey1])[opKey2])(opcode);
     }
 }

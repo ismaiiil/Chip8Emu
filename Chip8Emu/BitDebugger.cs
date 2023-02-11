@@ -30,15 +30,16 @@ public class BitDebugger
                 {
                     formattedBits = formattedBits.Replace("0", " ").Replace("1", "*");
                 }
-                    
+                
                 stringBuilder.Append(String.Format("|| {0} : " + "0x{1:X3} : " + "{2:X2} : " + "{3} ", 
                     Convert.ToString(i).PadLeft(4, paddingChar: '0'),
                     i,
                     byteArray[i], 
                     formattedBits));
-                    
+
+
             }
-            stringBuilder.Append("||");
+            // stringBuilder.Append("||");
             stringBuilder.Append('\n');
         }
 

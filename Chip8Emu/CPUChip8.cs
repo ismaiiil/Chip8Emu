@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace Chip8Emu;
 
-public static class ChipHardware
+public static class CpuChip8
 {
     //Font start adress
     public const ushort FontStartAddr = 0x050;
@@ -42,11 +42,6 @@ public static class ChipHardware
 
     //Keyboard
     public static byte[] keys = new byte[16];
-
-
-    static ChipHardware()
-    {
-    }
 
     public static byte[] getRandomByte()
     {
@@ -89,7 +84,7 @@ public static class ChipHardware
      */
     public static void OPC_1nnn(ushort opcode)
     {
-        PC = (ushort)(opcode & 0x0FFF); //the 0x0FFF is used to get the last 12 bits
+        PC = (ushort)(opcode & 0x0FFF);
     }
 
     /*
@@ -353,7 +348,7 @@ public static class ChipHardware
         byte Vx = (byte)((opcode & 0x0F00) >> 8);
         byte kk = (byte)(opcode & 0x00FF);
 
-        V[Vx] = (byte)(getRandomByte()[0x1] & kk);
+        V[Vx] = (byte)(getRandomByte()[0] & kk);
     }
     
     /*
@@ -362,38 +357,67 @@ public static class ChipHardware
 	* The interpreter reads n bytes from memory, starting at the address stored in I. These bytes are then displayed as sprites on screen at coordinates (Vx, Vy).
     * Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0.
      * If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
- */
+    */
     public static void OPC_Dxyn(ushort opcode)
     {
         byte Vx = (byte)((opcode & 0x0F00) >> 8);
         byte Vy = (byte)((opcode & 0x00F0) >> 4);
-        byte n =  (byte)(opcode & 0x000F);
 
-        byte xAxisPosition = (byte)(V[Vx] % GFX_WIDTH);
-        byte yAxisPosition = (byte)(V[Vy] % GFX_HEIGHT);
+        int x = V[Vx];
+        int y = V[Vy];
         
-        V[0xF] = 0;
-        for (int row = 0; row < n; ++row)
+        ushort spriteHeight =  (byte)(opcode & 0x000F);
+        int pixel;
+        
+        for (int yline = 0; yline < spriteHeight; yline++)
         {
-            byte spriteByte = MEMORY[I + row];
-
-            for (int col = 0; col < 8; ++col)
+            pixel = MEMORY[I + yline];
+            for (int xline = 0; xline < 8; xline++)
             {
-                byte spritePixel = (byte)(spriteByte & (0x80u >> col));
-                uint  screenPixel = (uint)((yAxisPosition + row) * GFX_WIDTH + (xAxisPosition + col));
-
-                // Sprite pixel is on
-                if ((spritePixel & (0x80 >> xAxisPosition)) != 0)
+                if ((pixel & (0x80 >> xline)) != 0)
                 {
-                    if (GFX[screenPixel] == 1)
+                    if (GFX[(x + xline + ((y + yline) * 64))] == 1)
                     {
                         V[0xF] = 1;
                     }
-                    GFX[screenPixel] ^= 1;
+                    GFX[x + xline + ((y + yline) * 64)] ^= 1;
                 }
             }
         }
+        
     }
+    // public static void OPC_Dxyn(ushort opcode)
+    // {
+    //     byte Vx = (byte)((opcode & 0x0F00) >> 8);
+    //     byte Vy = (byte)((opcode & 0x00F0) >> 4);
+    //     byte n =  (byte)(opcode & 0x000F);
+    //
+    //     byte xAxisPosition = (byte)(V[Vx] % GFX_WIDTH);
+    //     byte yAxisPosition = (byte)(V[Vy] % GFX_HEIGHT);
+    //     
+    //     V[0xF] = 0;
+    //     for (int row = 0; row < n; ++row)
+    //     {
+    //         byte spriteByte = MEMORY[I + row];
+    //
+    //         for (int col = 0; col < 8; ++col)
+    //         {
+    //             byte spritePixel = (byte)(spriteByte & (0x80u >> col));
+    //             uint screenPixel = (uint)((yAxisPosition + row) * GFX_WIDTH + (xAxisPosition + col));
+    //             // Console.WriteLine(screenPixel);
+    //
+    //             // Sprite pixel is on
+    //             if ((spritePixel & (0x80 >> xAxisPosition)) != 0)
+    //             {
+    //                 if (GFX[screenPixel] == 1)
+    //                 {
+    //                     V[0xF] = 1;
+    //                 }
+    //                 GFX[screenPixel] ^= 1;
+    //             }
+    //         }
+    //     }
+    // }
     
     /*
     * Ex9E - SKP Vx
@@ -624,71 +648,42 @@ public static class ChipHardware
     //create a Function Pointer Table starting from { , OPC_8XY0 }, opcodes of the CHIP 8 using dictionary
     public delegate void OpcodeFunction(ushort opcode);
 
+    [SuppressMessage("Usage", "CS8974", Justification = "Not production code.")]
     public static readonly Dictionary<ushort, object> OpcodeTable = new()
     {
-        //0xF000
-        // { 0x0, OPC_NULL },
-        // { 0x00E0, OPC_00E0 },
-        // { 0x00EE, OPC_00EE },
-        
+       
         { 0x0, new Dictionary<ushort,object>
                 {
                     { 0x0, OPC_00E0 },
-                    { 0xE, OPC_00EE },
+                    { 0xE, OPC_00EE }, //profiled
                 }},
 
-        { 0x1, OPC_1nnn },
-        { 0x2, OPC_2nnn },
-        { 0x3, OPC_3xkk },
-        { 0x4, OPC_4xkk },
-        { 0x5, OPC_5xy0 },
-        { 0x6, OPC_6xkk },
-        { 0x7, OPC_7xkk },
-        { 0x9, OPC_9xy0 },
-        { 0xA, OPC_Annn },
+        { 0x1, OPC_1nnn }, //profiled
+        { 0x2, OPC_2nnn }, //profiled
+        { 0x3, OPC_3xkk }, //profiled
+        { 0x4, OPC_4xkk }, //profiled
+        { 0x5, OPC_5xy0 }, //profiled
+        { 0x6, OPC_6xkk }, //profiled
+        { 0x7, OPC_7xkk }, //profiled
+        { 0x9, OPC_9xy0 }, //profiled
+        { 0xA, OPC_Annn }, //profiled
         { 0xB, OPC_Bnnn },
         { 0xC, OPC_Cxkk },
         { 0xD, OPC_Dxyn },
-        
-        //0xF00F
-        // { 0x8000, OPC_8xy0 },
-        // { 0x8001, OPC_8xy1 },
-        // { 0x8002, OPC_8xy2 },
-        // { 0x8003, OPC_8xy3 },
-        // { 0x8004, OPC_8xy4 },
-        // { 0x8005, OPC_8xy5 },
-        // { 0x8006, OPC_8xy6 },
-        // { 0x8007, OPC_8xy7 },
-        // { 0x800E, OPC_8xyE },
-        
+
         { 0x8, new Dictionary<ushort,object>
                 {
-                    { 0x0, OPC_8xy0 },
-                    { 0x1, OPC_8xy1 },
-                    { 0x2, OPC_8xy2 },
-                    { 0x3, OPC_8xy3 },
-                    { 0x4, OPC_8xy4 },
-                    { 0x5, OPC_8xy5 },
-                    { 0x6, OPC_8xy6 },
+                    { 0x0, OPC_8xy0 }, //profiled
+                    { 0x1, OPC_8xy1 }, //profiled
+                    { 0x2, OPC_8xy2 }, //profiled
+                    { 0x3, OPC_8xy3 }, //profiled
+                    { 0x4, OPC_8xy4 }, //profiled
+                    { 0x5, OPC_8xy5 }, //profiled
+                    { 0x6, OPC_8xy6 }, //profiled
                     { 0x7, OPC_8xy7 },
-                    { 0xE, OPC_8xyE },
+                    { 0xE, OPC_8xyE }, //profiled
                 } },
 
-
-        //0xF0FF
-        // { 0xE09E, OPC_Ex9E },
-        // { 0xE0A1, OPC_ExA1 },
-        
-        // { 0xF007, OPC_Fx07 },
-        // { 0xF00A, OPC_Fx0A },
-        // { 0xF015, OPC_Fx15 },
-        // { 0xF018, OPC_Fx18 },
-        // { 0xF01E, OPC_Fx1E },
-        // { 0xF029, OPC_Fx29 },        
-        // { 0xF033, OPC_Fx33 },
-        // { 0xF055, OPC_Fx55 },
-        // { 0xF065, OPC_Fx65 }
-        
         { 0xE, new Dictionary<ushort,object>
                 {
                     { 0xE, OPC_Ex9E },
@@ -703,24 +698,62 @@ public static class ChipHardware
             { 0x18, OPC_Fx18 },
             { 0x1E, OPC_Fx1E },
             { 0x29, OPC_Fx29 },        
-            { 0x33, OPC_Fx33 },
-            { 0x55, OPC_Fx55 },
-            { 0x65, OPC_Fx65 }
-        }}
+            { 0x33, OPC_Fx33 }, //profiled
+            { 0x55, OPC_Fx55 }, //profiled
+            { 0x65, OPC_Fx65 } //profiled
+        }},
+        
+        { 0x404, OPC_NULL },
     };
     
     
     public static void MainLoop()
     {
-        //FETCH
+        // --------------- FETCH 
         //concatenate two bytes from memory to get a 16 bit opcode
         ushort opcode = (ushort)(MEMORY[PC] << 8 | MEMORY[PC + 1]);
 
         //Move PROGRAM CURSOR
         PC += 2;
         
-        //Decode the OpCode using the OpcodeTable 
+        //Get the index of the Opcode
         
+        // --------------- DECODE 
+        byte leftKey = (byte)((opcode & 0xF000) >> 12); // The first nibble
+
+        var opCodeMedthod = OpcodeTable[leftKey];
+        var opCodeNested = opCodeMedthod as Dictionary<ushort, object>;
+        
+        if (opCodeNested == null)
+        {
+            ((Action<ushort>)opCodeMedthod)(opcode); //EXECUTE pattern _nnn
+        }
+        else
+        {
+            if (leftKey == 0xF)
+            {
+                byte rightKey = (byte)(opcode & 0x00FF);
+                ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _n__
+                
+            }
+            else
+            {
+                byte rightKey = (byte)(opcode & 0x000F);
+                ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _nn_
+            }
+        }
+        
+        // Update Delay Timer register
+        if (DT > 0)
+        {
+            --DT;
+        }
+
+        // Update Sound Timer register
+        if (ST > 0)
+        {
+            --ST;
+        }
 
     }
     
