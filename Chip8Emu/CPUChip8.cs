@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using Microsoft.Xna.Framework.Input;
 
 namespace Chip8Emu;
 
@@ -362,63 +363,41 @@ public static class CpuChip8
     {
         byte Vx = (byte)((opcode & 0x0F00) >> 8);
         byte Vy = (byte)((opcode & 0x00F0) >> 4);
+        ushort spriteHeight =  (byte)(opcode & 0x000F);
 
         int x = V[Vx];
         int y = V[Vy];
         
-        ushort spriteHeight =  (byte)(opcode & 0x000F);
-        int pixel;
+        V[0xF] = 0;
         
-        for (int yline = 0; yline < spriteHeight; yline++)
+        byte spriteByte;
+        ushort singleSpritePixel;
+        int screenPixel;
+        
+        for (int row = 0; row < spriteHeight; row++)
         {
-            pixel = MEMORY[I + yline];
-            for (int xline = 0; xline < 8; xline++)
+            spriteByte = MEMORY[I + row];
+            for (int column = 0; column < 8; column++)
             {
-                if ((pixel & (0x80 >> xline)) != 0)
+                singleSpritePixel = (ushort)(spriteByte & (0x80 >> column));
+                screenPixel = x + column + (y + row) * 64;
+                if (screenPixel >= GFX_WIDTH * GFX_HEIGHT)
                 {
-                    if (GFX[(x + xline + ((y + yline) * 64))] == 1)
+                    screenPixel -= GFX_WIDTH * GFX_HEIGHT ;
+                }
+                if (singleSpritePixel != 0)
+                {
+                    if (GFX[screenPixel] == 1)
                     {
                         V[0xF] = 1;
                     }
-                    GFX[x + xline + ((y + yline) * 64)] ^= 1;
+                    GFX[screenPixel] ^= 1;
                 }
             }
         }
         
     }
-    // public static void OPC_Dxyn(ushort opcode)
-    // {
-    //     byte Vx = (byte)((opcode & 0x0F00) >> 8);
-    //     byte Vy = (byte)((opcode & 0x00F0) >> 4);
-    //     byte n =  (byte)(opcode & 0x000F);
-    //
-    //     byte xAxisPosition = (byte)(V[Vx] % GFX_WIDTH);
-    //     byte yAxisPosition = (byte)(V[Vy] % GFX_HEIGHT);
-    //     
-    //     V[0xF] = 0;
-    //     for (int row = 0; row < n; ++row)
-    //     {
-    //         byte spriteByte = MEMORY[I + row];
-    //
-    //         for (int col = 0; col < 8; ++col)
-    //         {
-    //             byte spritePixel = (byte)(spriteByte & (0x80u >> col));
-    //             uint screenPixel = (uint)((yAxisPosition + row) * GFX_WIDTH + (xAxisPosition + col));
-    //             // Console.WriteLine(screenPixel);
-    //
-    //             // Sprite pixel is on
-    //             if ((spritePixel & (0x80 >> xAxisPosition)) != 0)
-    //             {
-    //                 if (GFX[screenPixel] == 1)
-    //                 {
-    //                     V[0xF] = 1;
-    //                 }
-    //                 GFX[screenPixel] ^= 1;
-    //             }
-    //         }
-    //     }
-    // }
-    
+
     /*
     * Ex9E - SKP Vx
     * Skip next instruction if key with the value of Vx is pressed.
@@ -582,7 +561,7 @@ public static class CpuChip8
     {
         byte Vx = (byte)((opcode & 0x0F00) >> 8);
         byte currentFontStart = V[Vx];
-        I = (ushort)(FontStartAddr + 5 * currentFontStart);
+        I = (ushort)(FontStartAddr + (5 * currentFontStart));
     }
     
     /*
@@ -604,7 +583,7 @@ public static class CpuChip8
         number /= 10;
 
         // Hundreds-place
-        MEMORY[I + 1] = (byte)(number % 10);
+        MEMORY[I] = (byte)(number % 10);
     }
     
     /*
@@ -642,7 +621,7 @@ public static class CpuChip8
     */
     public static void OPC_NULL(ushort opcode)
     {
-        Console.WriteLine("{0:X} <===================================================================== NULL OPCODE OR UNRECOGNISED",opcode);
+        Console.WriteLine("{0:X4} <==== NULL OPCODE OR UNRECOGNISED, Are sure this is a Chip 8 rom? Not SuperChip8,XO chip etc...",opcode);
     }
     
     //create a Function Pointer Table starting from { , OPC_8XY0 }, opcodes of the CHIP 8 using dictionary
@@ -655,33 +634,33 @@ public static class CpuChip8
         { 0x0, new Dictionary<ushort,object>
                 {
                     { 0x0, OPC_00E0 },
-                    { 0xE, OPC_00EE }, //profiled
+                    { 0xE, OPC_00EE }, 
                 }},
 
-        { 0x1, OPC_1nnn }, //profiled
-        { 0x2, OPC_2nnn }, //profiled
-        { 0x3, OPC_3xkk }, //profiled
-        { 0x4, OPC_4xkk }, //profiled
-        { 0x5, OPC_5xy0 }, //profiled
-        { 0x6, OPC_6xkk }, //profiled
-        { 0x7, OPC_7xkk }, //profiled
-        { 0x9, OPC_9xy0 }, //profiled
-        { 0xA, OPC_Annn }, //profiled
+        { 0x1, OPC_1nnn }, 
+        { 0x2, OPC_2nnn }, 
+        { 0x3, OPC_3xkk },
+        { 0x4, OPC_4xkk }, 
+        { 0x5, OPC_5xy0 }, 
+        { 0x6, OPC_6xkk }, 
+        { 0x7, OPC_7xkk }, 
+        { 0x9, OPC_9xy0 }, 
+        { 0xA, OPC_Annn }, 
         { 0xB, OPC_Bnnn },
         { 0xC, OPC_Cxkk },
         { 0xD, OPC_Dxyn },
 
         { 0x8, new Dictionary<ushort,object>
                 {
-                    { 0x0, OPC_8xy0 }, //profiled
-                    { 0x1, OPC_8xy1 }, //profiled
-                    { 0x2, OPC_8xy2 }, //profiled
-                    { 0x3, OPC_8xy3 }, //profiled
-                    { 0x4, OPC_8xy4 }, //profiled
-                    { 0x5, OPC_8xy5 }, //profiled
-                    { 0x6, OPC_8xy6 }, //profiled
+                    { 0x0, OPC_8xy0 },
+                    { 0x1, OPC_8xy1 }, 
+                    { 0x2, OPC_8xy2 },
+                    { 0x3, OPC_8xy3 }, 
+                    { 0x4, OPC_8xy4 }, 
+                    { 0x5, OPC_8xy5 },
+                    { 0x6, OPC_8xy6 }, 
                     { 0x7, OPC_8xy7 },
-                    { 0xE, OPC_8xyE }, //profiled
+                    { 0xE, OPC_8xyE }, 
                 } },
 
         { 0xE, new Dictionary<ushort,object>
@@ -698,20 +677,30 @@ public static class CpuChip8
             { 0x18, OPC_Fx18 },
             { 0x1E, OPC_Fx1E },
             { 0x29, OPC_Fx29 },        
-            { 0x33, OPC_Fx33 }, //profiled
-            { 0x55, OPC_Fx55 }, //profiled
-            { 0x65, OPC_Fx65 } //profiled
+            { 0x33, OPC_Fx33 },
+            { 0x55, OPC_Fx55 },
+            { 0x65, OPC_Fx65 }
         }},
         
         { 0x404, OPC_NULL },
     };
+
+    public static void SetKeyWithInput(int index, Keys key)
+    {
+        keys[index] = (byte)(Keyboard.GetState().IsKeyDown(key) ? 1 : 0);
+    }
     
     
-    public static void MainLoop()
+    public static void CycleCPUOnce()
     {
         // --------------- FETCH 
         //concatenate two bytes from memory to get a 16 bit opcode
         ushort opcode = (ushort)(MEMORY[PC] << 8 | MEMORY[PC + 1]);
+
+        if (opcode == 0xF018)
+        {
+            Console.WriteLine("score v1");
+        }
 
         //Move PROGRAM CURSOR
         PC += 2;
@@ -730,16 +719,23 @@ public static class CpuChip8
         }
         else
         {
-            if (leftKey == 0xF)
+            try
             {
-                byte rightKey = (byte)(opcode & 0x00FF);
-                ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _n__
+                if (leftKey == 0xF)
+                {
+                    byte rightKey = (byte)(opcode & 0x00FF);
+                    ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _n__
                 
+                }
+                else
+                {
+                    byte rightKey = (byte)(opcode & 0x000F);
+                    ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _nn_
+                }
             }
-            else
+            catch (KeyNotFoundException e)
             {
-                byte rightKey = (byte)(opcode & 0x000F);
-                ((Action<ushort>)opCodeNested[rightKey])(opcode); //EXECUTE pattern _nn_
+                OPC_NULL(opcode);
             }
         }
         
@@ -754,10 +750,5 @@ public static class CpuChip8
         {
             --ST;
         }
-
     }
-    
-
-
-
 }
