@@ -73,10 +73,6 @@ public class Game1 : Game
 
         _texture.SetData(_pixels);
         
-
-        
-        
-        //play square wave with Monogame Soundeffect
         base.Update(gameTime);
     }
 

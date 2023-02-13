@@ -697,11 +697,6 @@ public static class CpuChip8
         //concatenate two bytes from memory to get a 16 bit opcode
         ushort opcode = (ushort)(MEMORY[PC] << 8 | MEMORY[PC + 1]);
 
-        if (opcode == 0xF018)
-        {
-            Console.WriteLine("score v1");
-        }
-
         //Move PROGRAM CURSOR
         PC += 2;
         
