@@ -19,8 +19,6 @@
 
   <ItemGroup>
     <EmbeddedResource Remove="bin\**" />
-    <EmbeddedResource Include="DisplayRenderer\Icon.bmp" />
-    <EmbeddedResource Include="DisplayRenderer\Icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,11 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
     <PackageReference Include="NUnit" Version="3.13.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\RenderingProject\RenderingProject.csproj" />
   </ItemGroup>
 
 </Project>

@@ -365,8 +365,8 @@ public static class CpuChip8
         byte Vy = (byte)((opcode & 0x00F0) >> 4);
         ushort spriteHeight =  (byte)(opcode & 0x000F);
 
-        int x = V[Vx];
-        int y = V[Vy];
+        int x = V[Vx] % GFX_WIDTH;
+        int y = V[Vy] % GFX_HEIGHT;
         
         V[0xF] = 0;
         
@@ -538,7 +538,7 @@ public static class CpuChip8
     public static void OPC_Fx18(ushort opcode)
     {
         byte Vx = (byte)((opcode & 0x0F00) >> 8);
-        ST = V[Vx];
+        ST = (byte)(V[Vx] * 2);
     }
     
     /*
